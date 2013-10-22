@@ -31,6 +31,11 @@ class XTubeVideo(object):
     """
     A video.
 
+    Finding the .flv URL:
+        It first fetches the watch.php page and parse flashVars to extract 3
+        variables : user id, video id, clip id. Then it uses find_video.php to
+        get this: 
+
     Attributes:
         title
         user_id/video_id/clip_id
@@ -39,20 +44,25 @@ class XTubeVideo(object):
     """
     def __init__(self, watch_url):
         self.watch_url = watch_url
+
+        # First, we need to GET the watch.php page
         vg = requests.get(watch_url)
         if vg.status_code != 200:
             raise Exception('HTTP error while getting watch page: %s'%vg.status_code)
 
         vs = vg.content.decode('utf-8')
 
+        # we can read the title in it
         title = title_re.search(vs).group(1)
         title = title[:title.find(' - XTube')]
         self.title = title
 
+        # clean it to make a safe filename
         valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
         clean_title = ''.join(c for c in title if c in valid_chars)
         clean_title = clean_title.strip()
         
+        # and get flashVars containing user/video/clip ids.
         matches = flashvars_re.search(vs)
         if not matches:
             raise Exception('Failed to parse flash vars.')
@@ -61,6 +71,9 @@ class XTubeVideo(object):
         self.clip_id = matches.group(3)
         self.clean_title = clean_title or self.user_id+' - '+self.video_id
 
+        # Now we POST that to find_video.php that returns what we're searching
+        # for, prefixed by &filename and urlencoded:
+        #     &filename=http%3A%2F%2F...
         sp = requests.post(find_video_url, data={
             'user_id': self.user_id,
             'video_id': self.video_id,
