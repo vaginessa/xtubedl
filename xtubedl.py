@@ -31,11 +31,6 @@ class XTubeVideo(object):
     """
     A video.
 
-    Finding the .flv URL:
-        It first fetches the watch.php page and parse flashVars to extract 3
-        variables : user id, video id, clip id. Then it uses find_video.php to
-        get this: 
-
     Attributes:
         title
         user_id/video_id/clip_id
