@@ -81,7 +81,11 @@ class XTubeVideo(object):
         })
         if sp.status_code != 200:
             raise Exception('HTTP error while getting FLV URL: %s' % sp.status_code)
-        self.flv_url = urllib.parse.unquote(sp.content[10:].decode('utf-8'))
+        self.flv_url = sp.content[10:].decode('utf-8')
+        try:
+            self.flv_url = urllib.parse.unquote(self.flv_url)
+        except AttributeError:
+            self.flv_url = urllib.unquote(self.flv_url)
 
 def find_watch_urls(index_url):
     pg = requests.get(index_url)
